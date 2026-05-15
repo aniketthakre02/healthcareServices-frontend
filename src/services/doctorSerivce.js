@@ -1,0 +1,23 @@
+import apiClient from "../api/apiClient";
+
+export const getDoctorProfile = async () => {
+    const response = await apiClient.get("/doctor/myProfile");
+    return response.data;
+};
+
+export const updateDoctorProfile = async (data) => {
+    const response = await apiClient.put("/doctor/updateMyProfile", data);
+    return response.data;
+};
+
+export const getDoctorAppointments = async () => {
+    const response = await apiClient.get("/doctor/myAppointments");
+    return response.data;
+};
+
+export const updateAppointmentStatus = async (appointmentId, status) => {
+    const response = await apiClient.put(
+        `/doctor/appointment/${appointmentId}/status?status=${status}`
+    );
+    return response.data;
+};

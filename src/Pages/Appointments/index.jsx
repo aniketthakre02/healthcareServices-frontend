@@ -5,7 +5,7 @@ import { useReducer, useEffect } from 'react';
 import { getAllDoctors, bookAppointment, getMyAppointments } from '../../services/appointmentService';
 
 // ── Constants ─────────────────────────────────────────────
-const filters = ["All", "PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"];
+const filters = ["All", "REQUESTED", "APPROVED", "CANCELLED", "COMPLETED"];
 
 const statusStyles = {
     PENDING: "bg-yellow-100 text-yellow-600",
@@ -15,8 +15,8 @@ const statusStyles = {
 };
 
 const statusLabels = {
-    PENDING: "Pending",
-    CONFIRMED: "Confirmed",
+    REQUESTED: "Requested",
+    APPROVED: "Approved",
     CANCELLED: "Cancelled",
     COMPLETED: "Completed"
 };
@@ -111,7 +111,7 @@ export const Appointments = () => {
         dispatch({ type: "FETCH_APPTS_START" });
         getMyAppointments()
             .then(data => {
-                console.log("Appointments:", data);
+                // console.log("Appointments:", data);
                 dispatch({ type: "FETCH_APPTS_SUCCESS", payload: data });
             })
             .catch(() => dispatch({ type: "FETCH_APPTS_ERROR", payload: "Failed to load appointments." }));
@@ -147,7 +147,7 @@ export const Appointments = () => {
             dispatch({
                 type: "BOOKING_SUCCESS",
                 payload: "Appointment booked successfully!",
-                newAppt   // 👈 backend returns saved appointment, add to list
+                newAppt   // backend returns saved appointment, add to list
             });
             setTimeout(() => dispatch({ type: "CLOSE_MODAL" }), 1500);
         } catch (err) {

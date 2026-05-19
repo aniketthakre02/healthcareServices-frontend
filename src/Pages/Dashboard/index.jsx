@@ -36,7 +36,7 @@ export const Dashboard = () => {
                         {greeting}, <span className="text-orange-500">{user?.name}</span>
                     </h1>
                     <p className="text-gray-500 mt-2">
-                        Here's what's happening in your hospital today.
+                        Here's all what's needs to be known.
                     </p>
                 </div>
 

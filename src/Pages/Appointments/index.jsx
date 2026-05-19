@@ -165,9 +165,7 @@ export const Appointments = () => {
         <div className="min-h-screen bg-gradient-to-r from-orange-50 to-white">
             <Navbar />
             <Sidebar />
-
             <div className="ml-64 p-8 space-y-6">
-
                 {/* HEADER */}
                 <div className="flex justify-between items-center">
                     <div>
@@ -303,7 +301,6 @@ export const Appointments = () => {
                                     ))}
                                 </select>
                             </div>
-
                             <div>
                                 <label className="text-sm text-gray-500 mb-1 block">Date & Time</label>
                                 <input

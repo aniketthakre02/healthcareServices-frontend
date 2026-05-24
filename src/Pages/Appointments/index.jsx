@@ -32,7 +32,7 @@ const formatDate = (dateTime) => {
 // ── State ─────────────────────────────────────────────────
 const initialState = {
     filter: "All",
-    myAppointments: [],   // 👈 real data from backend
+    myAppointments: [],   // real data from backend
     fetchingAppts: false,
     showModal: false,
     doctors: [],

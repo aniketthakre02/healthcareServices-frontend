@@ -7,7 +7,7 @@ export const login = async (data) => {
 };
 
 export const register = async (data) => {
-  const response = await apiClient.post("/api/auth//register", data);
+  const response = await apiClient.post("/api/auth/register", data);
   return response.data;
 };
 

@@ -92,7 +92,7 @@ export const Doctors = () => {
             try {
                 const result = await getAllDoctors();
                 setData(result);
-            } catch (err) {
+            } catch (_err) {
                 setFetchError("Failed to load doctors.");
             }
         };
@@ -125,13 +125,13 @@ export const Doctors = () => {
             });
             dispatch({ type: "BOOKING_SUCCESS", payload: "Appointment booked successfully!" });
             setTimeout(() => dispatch({ type: "CLOSE_MODAL" }), 1500);
-        } catch (err) {
-            const msg = err.normalizedMessage || err.response?.data?.message || "Booking failed. Please try again.";
+        } catch (_err) {
+            const msg = _err.normalizedMessage || _err.response?.data?.message || "Booking failed. Please try again.";
             dispatch({ type: "BOOKING_ERROR", payload: typeof msg === "string" ? msg : "Booking failed." });
         }
     };
 
-    const specializations = ["All", ...new Set(data.map(d => d.specialization))];
+    const specializations = ["All", ...new Set(data.map(d => d.specialization).filter(Boolean))];
 
     const filtered = data.filter(d => {
         const matchesSearch =

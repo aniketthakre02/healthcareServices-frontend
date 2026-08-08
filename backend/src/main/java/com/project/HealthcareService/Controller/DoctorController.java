@@ -3,7 +3,6 @@ package com.project.HealthcareService.Controller;
 import com.project.HealthcareService.DTOs.request.UpdateDoctorProfileRequest;
 import com.project.HealthcareService.DTOs.response.AppointmentResponse;
 import com.project.HealthcareService.DTOs.response.DoctorProfileResponse;
-import com.project.HealthcareService.Model.Appointment;
 import com.project.HealthcareService.Model.AppointmentStatus;
 import com.project.HealthcareService.Service.AppointmentService;
 import com.project.HealthcareService.Service.DoctorService;
@@ -18,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/doctor")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ROLE_DOCTOR')")
+@PreAuthorize("hasAuthority('ROLE_DOCTOR')")
 public class DoctorController {
     private final DoctorService doctorService;
     private final AppointmentService appointmentService;
@@ -29,6 +28,7 @@ public class DoctorController {
         String email= authentication.getName();
         return ResponseEntity.ok(doctorService.getMyProfile(email));
     }
+
     @PutMapping("/updateMyProfile")
     public ResponseEntity<DoctorProfileResponse> updateProfile(@RequestBody UpdateDoctorProfileRequest request,
             Authentication authentication){
@@ -37,6 +37,7 @@ public class DoctorController {
                 doctorService.updateMyProfile(email,request)
         );
     }
+
     @GetMapping("/myAppointments")
     public ResponseEntity<List<AppointmentResponse>> appointmentList(Authentication authentication){
         String email=authentication.getName();
@@ -54,7 +55,4 @@ public class DoctorController {
       }
       return ResponseEntity.ok(appointmentService.updateStatus(id,status));
     }
-
-
-
 }

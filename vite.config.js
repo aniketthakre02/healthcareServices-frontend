@@ -37,4 +37,3 @@ export default defineConfig({
     strictPort: true,
   },
 })
-/* eslint-env node */

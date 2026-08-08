@@ -90,15 +90,22 @@ public class ApplicationUserServiceImpl implements ApplicationUserService {
         if (!repo.existsById(userId)) {
             return false;
         }
-        // Delete related entities first to avoid FK violation
         try {
-            // Delete appointments where user is patient (by email) or doctor
             repo.findById(userId).ifPresent(user -> {
-                // Clean up doctor/patient profiles (cascade via @MapsId but explicit is safer)
-                patientRepository.findByUser(user).ifPresent(patientRepository::delete);
-                doctorRepository.findByUser(user).ifPresent(doctorRepository::delete);
-                // Optionally: appointmentRepository.deleteByDoctorId(userId);
-                // appointmentRepository.deleteByPatientEmail(user.getEmail());
+                // Clean up related profiles
+                patientRepository.findByUser(user).ifPresent(p -> {
+                    // Remove patient's appointments
+                    try { appointmentRepository.deleteByPatientEmail(user.getEmail()); } catch (Exception ignored) {}
+                    patientRepository.delete(p);
+                });
+                doctorRepository.findByUser(user).ifPresent(d -> {
+                    try { appointmentRepository.deleteByDoctorId(userId); } catch (Exception ignored) {}
+                    doctorRepository.delete(d);
+                });
+                // If user had both roles but one was already deleted above, ensure remaining appointments cleaned
+                // For users with no profile rows, still try to clean by id/email
+                try { appointmentRepository.deleteByDoctorId(userId); } catch (Exception ignored) {}
+                try { appointmentRepository.deleteByPatientEmail(user.getEmail()); } catch (Exception ignored) {}
             });
         } catch (Exception e) {
             System.out.println("Warning during related entity cleanup: " + e.getMessage());

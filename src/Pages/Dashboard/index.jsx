@@ -33,10 +33,10 @@ export const Dashboard = () => {
                 {/* HEADER */}
                 <div>
                     <h1 className="text-4xl font-bold text-gray-900">
-                        {greeting}, <span className="text-orange-500">{user?.name}</span>
+                        {greeting}, <span className="text-orange-500">{user?.name || user?.sub || "User"}</span>
                     </h1>
                     <p className="text-gray-500 mt-2">
-                        Here's all what's needs to be known.
+                        Here&apos;s what you need to know today.
                     </p>
                 </div>
 

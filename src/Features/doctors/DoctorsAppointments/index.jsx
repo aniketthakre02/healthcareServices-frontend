@@ -1,5 +1,5 @@
 import { useReducer, useEffect } from 'react';
-import { getDoctorAppointments, updateAppointmentStatus } from '../../../services/doctorSerivce';
+import { getDoctorAppointments, updateAppointmentStatus } from '../../../services/doctorService';
 import { Sidebar } from '../../../Components/layout/Sidebar';
 import { Navbar } from '../../../Components/layout/Navbar';
 import { Calendar, User, Check, X } from 'lucide-react';

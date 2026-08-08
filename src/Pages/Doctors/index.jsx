@@ -104,22 +104,30 @@ export const Doctors = () => {
     };
 
     const handleBooking = async () => {
-        if (!form.dateTime || !form.reason) {
+        if (!form.dateTime || !form.reason.trim()) {
             dispatch({ type: "BOOKING_ERROR", payload: "All fields are required." });
             return;
         }
-
+        if (new Date(form.dateTime) <= new Date()) {
+            dispatch({ type: "BOOKING_ERROR", payload: "Appointment must be in the future." });
+            return;
+        }
+        if (!selectedDoctor?.userId) {
+            dispatch({ type: "BOOKING_ERROR", payload: "No doctor selected." });
+            return;
+        }
         dispatch({ type: "BOOKING_START" });
         try {
             await bookAppointment({
-                doctorId: selectedDoctor.userId,  // 👈 use selected doctor's id
+                doctorId: selectedDoctor.userId,
                 dateTime: form.dateTime,
-                reason:   form.reason
+                reason:   form.reason.trim()
             });
             dispatch({ type: "BOOKING_SUCCESS", payload: "Appointment booked successfully!" });
             setTimeout(() => dispatch({ type: "CLOSE_MODAL" }), 1500);
         } catch (err) {
-            dispatch({ type: "BOOKING_ERROR", payload: "Booking failed. Please try again." });
+            const msg = err.normalizedMessage || err.response?.data?.message || "Booking failed. Please try again.";
+            dispatch({ type: "BOOKING_ERROR", payload: typeof msg === "string" ? msg : "Booking failed." });
         }
     };
 

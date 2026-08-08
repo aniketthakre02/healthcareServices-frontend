@@ -8,17 +8,19 @@ import { getAllDoctors, bookAppointment, getMyAppointments } from '../../service
 const filters = ["All", "REQUESTED", "APPROVED", "CANCELLED", "COMPLETED"];
 
 const statusStyles = {
-    PENDING: "bg-yellow-100 text-yellow-600",
-    CONFIRMED: "bg-green-100 text-green-600",
+    REQUESTED: "bg-yellow-100 text-yellow-600",
+    APPROVED: "bg-green-100 text-green-600",
     CANCELLED: "bg-red-100 text-red-500",
-    COMPLETED: "bg-blue-100 text-blue-500"
+    COMPLETED: "bg-blue-100 text-blue-500",
+    REJECTED: "bg-red-100 text-red-500",
 };
 
 const statusLabels = {
     REQUESTED: "Requested",
     APPROVED: "Approved",
     CANCELLED: "Cancelled",
-    COMPLETED: "Completed"
+    COMPLETED: "Completed",
+    REJECTED: "Rejected"
 };
 
 const formatDate = (dateTime) => {
@@ -32,16 +34,16 @@ const formatDate = (dateTime) => {
 // ── State ─────────────────────────────────────────────────
 const initialState = {
     filter: "All",
-    myAppointments: [],   // 👈 real data from backend
+    myAppointments: [],
     fetchingAppts: false,
     showModal: false,
     doctors: [],
     loading: false,
+    doctorsLoading: false,
     error: "",
     success: "",
     form: {
         doctorId: "",
-        doctorName: "",
         dateTime: "",
         reason: ""
     }
@@ -50,22 +52,16 @@ const initialState = {
 // ── Reducer ───────────────────────────────────────────────
 const appointmentReducer = (state, action) => {
     switch (action.type) {
-
         case "SET_FILTER":
             return { ...state, filter: action.payload };
-
         case "FETCH_APPTS_START":
-            return { ...state, fetchingAppts: true };
-
+            return { ...state, fetchingAppts: true, error: "" };
         case "FETCH_APPTS_SUCCESS":
             return { ...state, fetchingAppts: false, myAppointments: action.payload };
-
         case "FETCH_APPTS_ERROR":
             return { ...state, fetchingAppts: false, error: action.payload };
-
         case "OPEN_MODAL":
             return { ...state, showModal: true, loading: false, error: "", success: "" };
-
         case "CLOSE_MODAL":
             return {
                 ...state,
@@ -75,25 +71,23 @@ const appointmentReducer = (state, action) => {
                 success: "",
                 form: initialState.form
             };
-
         case "SET_DOCTORS":
-            return { ...state, doctors: action.payload };
-
+            return { ...state, doctors: action.payload, doctorsLoading: false };
+        case "SET_DOCTORS_LOADING":
+            return { ...state, doctorsLoading: true };
+        case "SET_DOCTORS_ERROR":
+            return { ...state, doctorsLoading: false, error: action.payload };
         case "FORM_CHANGE":
             return { ...state, form: { ...state.form, [action.field]: action.value } };
-
         case "BOOKING_START":
             return { ...state, loading: true, error: "", success: "" };
-
         case "BOOKING_SUCCESS":
             return {
                 ...state,
                 loading: false,
                 success: action.payload,
-                // 👇 add newly booked appointment to list immediately
                 myAppointments: [action.newAppt, ...state.myAppointments]
             };
-
         case "BOOKING_ERROR":
             return { ...state, loading: false, error: action.payload };
         default:
@@ -104,15 +98,14 @@ const appointmentReducer = (state, action) => {
 // ── Component ─────────────────────────────────────────────
 export const Appointments = () => {
     const [state, dispatch] = useReducer(appointmentReducer, initialState);
-    const { filter, myAppointments, fetchingAppts, showModal, doctors, loading, error, success, form } = state;
+    const { filter, myAppointments, fetchingAppts, showModal, doctors, loading, doctorsLoading, error, success, form } = state;
 
     // fetch patient's own appointments on mount
     useEffect(() => {
         dispatch({ type: "FETCH_APPTS_START" });
         getMyAppointments()
             .then(data => {
-                // console.log("Appointments:", data);
-                dispatch({ type: "FETCH_APPTS_SUCCESS", payload: data });
+                dispatch({ type: "FETCH_APPTS_SUCCESS", payload: Array.isArray(data) ? data : [] });
             })
             .catch(() => dispatch({ type: "FETCH_APPTS_ERROR", payload: "Failed to load appointments." }));
     }, []);
@@ -120,38 +113,47 @@ export const Appointments = () => {
     // fetch doctors when modal opens
     useEffect(() => {
         if (!showModal) return;
+        dispatch({ type: "SET_DOCTORS_LOADING" });
         getAllDoctors()
-            .then(data => console.log(data) + "" + dispatch({ type: "SET_DOCTORS", payload: data })
-            )
-            .catch(err => console.error("Failed to fetch doctors:", err));
+            .then(data => {
+                dispatch({ type: "SET_DOCTORS", payload: Array.isArray(data) ? data : [] });
+            })
+            .catch(err => {
+                console.error("Failed to fetch doctors:", err);
+                dispatch({ type: "SET_DOCTORS_ERROR", payload: "Failed to load doctors. Please try again." });
+            });
     }, [showModal]);
 
     const handleChange = (e) => {
-        // alert(e.target.value);
         dispatch({ type: "FORM_CHANGE", field: e.target.name, value: e.target.value });
     };
 
     const handleBooking = async () => {
-        if (!form.doctorId || !form.dateTime || !form.reason) {
+        if (!form.doctorId || !form.dateTime || !form.reason.trim()) {
             dispatch({ type: "BOOKING_ERROR", payload: "All fields are required." });
+            return;
+        }
+        // Validate future date
+        if (new Date(form.dateTime) <= new Date()) {
+            dispatch({ type: "BOOKING_ERROR", payload: "Appointment must be scheduled in the future." });
             return;
         }
         dispatch({ type: "BOOKING_START" });
         try {
             const newAppt = await bookAppointment({
                 doctorId: form.doctorId,
-                doctorName: form.doctorName,
                 dateTime: form.dateTime,
-                reason: form.reason
+                reason: form.reason.trim()
             });
             dispatch({
                 type: "BOOKING_SUCCESS",
                 payload: "Appointment booked successfully!",
-                newAppt   // backend returns saved appointment, add to list
+                newAppt
             });
             setTimeout(() => dispatch({ type: "CLOSE_MODAL" }), 1500);
         } catch (err) {
-            dispatch({ type: "BOOKING_ERROR", payload: "Booking failed. Please try again." });
+            const msg = err.normalizedMessage || err.response?.data?.message || "Booking failed. Please try again.";
+            dispatch({ type: "BOOKING_ERROR", payload: typeof msg === "string" ? msg : "Booking failed." });
         }
     };
 
@@ -159,7 +161,6 @@ export const Appointments = () => {
     const filtered = filter === "All"
         ? myAppointments
         : myAppointments.filter(a => a.status === filter);
-    console.log("filtered" + filtered);
 
     return (
         <div className="min-h-screen bg-gradient-to-r from-orange-50 to-white">
@@ -203,6 +204,12 @@ export const Appointments = () => {
                     ))}
                 </div>
 
+                {error && !showModal && (
+                    <div className="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-lg border border-red-200">
+                        {error}
+                    </div>
+                )}
+
                 {/* APPOINTMENTS TABLE */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
                     {fetchingAppts ? (
@@ -231,7 +238,7 @@ export const Appointments = () => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <User size={14} className="text-orange-400" />
-                                                <span className="text-sm text-gray-700">{appt.doctorName}</span>
+                                                <span className="text-sm text-gray-700">{appt.doctorName || appt.doctorId || "—"}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -286,23 +293,27 @@ export const Appointments = () => {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="text-sm text-gray-500 mb-1 block">Select Doctor</label>
-                                <select
-                                    name="doctorId"
-                                    value={form.doctorId}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
-                                >
-                                    <option value="">-- Select a Doctor --</option>
-                                    {doctors.map(doctor => (
-                                        <option key={doctor.userId} value={doctor.userId}>
-                                            {doctor.name} — {doctor.specialization}
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="text-sm text-gray-500 mb-1 block">Select Doctor *</label>
+                                {doctorsLoading ? (
+                                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400">Loading doctors...</div>
+                                ) : (
+                                    <select
+                                        name="doctorId"
+                                        value={form.doctorId}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
+                                    >
+                                        <option value="">-- Select a Doctor --</option>
+                                        {doctors.map(doctor => (
+                                            <option key={doctor.userId} value={doctor.userId}>
+                                                {doctor.name} — {doctor.specialization || "General"}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
                             </div>
                             <div>
-                                <label className="text-sm text-gray-500 mb-1 block">Date & Time</label>
+                                <label className="text-sm text-gray-500 mb-1 block">Date & Time *</label>
                                 <input
                                     type="datetime-local"
                                     name="dateTime"
@@ -313,15 +324,17 @@ export const Appointments = () => {
                                 />
                             </div>
                             <div>
-                                <label className="text-sm text-gray-500 mb-1 block">Reason for Visit</label>
+                                <label className="text-sm text-gray-500 mb-1 block">Reason for Visit *</label>
                                 <textarea
                                     name="reason"
                                     value={form.reason}
                                     onChange={handleChange}
                                     placeholder="Describe your reason for visit..."
                                     rows={3}
+                                    maxLength={500}
                                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400 resize-none"
                                 />
+                                <p className="text-xs text-gray-400 mt-1 text-right">{form.reason.length}/500</p>
                             </div>
                         </div>
 
@@ -334,7 +347,7 @@ export const Appointments = () => {
                             </button>
                             <button
                                 onClick={handleBooking}
-                                disabled={loading}
+                                disabled={loading || doctorsLoading}
                                 className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition disabled:opacity-50"
                             >
                                 {loading ? "Booking..." : "Confirm"}

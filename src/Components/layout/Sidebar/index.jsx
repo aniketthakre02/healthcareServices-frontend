@@ -38,16 +38,16 @@ export const Sidebar = () => {
     const menu = allMenus[user?.role] || allMenus["ROLE_PATIENT"];
 
     return (
-        <div className="w-64 h-[calc(100vh-20px)] bg-white border-r border-gray-300 fixed left-0">
-
+        <div className="w-64 h-[calc(100vh-80px)] bg-white border-r border-gray-200 fixed left-0 top-20 overflow-y-auto">
             {/* Role badge */}
             <div className="px-4 py-3 border-b border-gray-100">
                 <span className={`text-xs font-semibold px-2 py-1 rounded-full
-                    ${user?.role === "ROLE_ADMIN"  && "bg-purple-100 text-purple-600"}
-                    ${user?.role === "ROLE_DOCTOR"  && "bg-blue-100 text-blue-600"}
-                    ${user?.role === "ROLE_PATIENT" && "bg-orange-100 text-orange-500"}
+                    ${user?.role === "ROLE_ADMIN"  ? "bg-purple-100 text-purple-600" : ""}
+                    ${user?.role === "ROLE_DOCTOR" ? "bg-blue-100 text-blue-600" : ""}
+                    ${user?.role === "ROLE_PATIENT" ? "bg-orange-100 text-orange-500" : ""}
+                    ${!user?.role ? "bg-gray-100 text-gray-500" : ""}
                 `}>
-                    {user?.role?.replace("ROLE_", "")}
+                    {user?.role?.replace("ROLE_", "") || "PATIENT"}
                 </span>
             </div>
             {menu.map((item, index) => {
@@ -58,14 +58,14 @@ export const Sidebar = () => {
                     <div
                         key={index}
                         onClick={() => navigate(item.path)}
-                        className={`flex items-center gap-3 p-4 cursor-pointer border-b border-gray-300 transition
+                        className={`flex items-center gap-3 p-4 cursor-pointer border-b border-gray-100 transition
                             ${isActive
-                                ? "bg-orange-50 text-orange-500 font-semibold"
-                                : "text-gray-800 hover:bg-gray-100"
+                                ? "bg-orange-50 text-orange-500 font-semibold border-l-4 border-l-orange-500"
+                                : "text-gray-800 hover:bg-gray-50"
                             }`}
                     >
-                        <Icon className={`w-5 h-5 ${isActive ? "text-orange-500" : "text-gray-600"}`} />
-                        <span className="font-semibold">{item.name}</span>
+                        <Icon className={`w-5 h-5 ${isActive ? "text-orange-500" : "text-gray-500"}`} />
+                        <span className="font-medium text-sm">{item.name}</span>
                     </div>
                 );
             })}

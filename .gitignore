@@ -22,4 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env
+# keep .env for docker demo but ignore secrets in real deploy
+.env.local
+.env.production

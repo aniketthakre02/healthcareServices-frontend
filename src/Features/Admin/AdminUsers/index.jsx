@@ -59,7 +59,7 @@ const adminReducer = (state, action) => {
         case "FORM_CHANGE":
             return { ...state, form: { ...state.form, [action.field]: action.value } };
 
-        case "TOGGLE_ROLE": {
+        case "TOGGLE_ROLE":
             const hasRole = state.form.roles.includes(action.role);
             return {
                 ...state,
@@ -70,7 +70,6 @@ const adminReducer = (state, action) => {
                         : [...state.form.roles, action.role]                // add
                 }
             };
-        }
 
         case "SAVE_SUCCESS":
             return {
@@ -121,7 +120,7 @@ export const AdminUsers = () => {
                 roles:    form.roles   // sends Set<Role> as array — Spring handles it
             });
             dispatch({ type: "SAVE_SUCCESS", payload: updated });
-        } catch (_err) {
+        } catch (err) {
             dispatch({ type: "SET_ERROR", payload: "Failed to update user." });
         }
     };
@@ -131,7 +130,7 @@ export const AdminUsers = () => {
         try {
             await deleteUser(userId);
             dispatch({ type: "DELETE_SUCCESS", userId });
-        } catch (_err) {
+        } catch (err) {
             dispatch({ type: "SET_ERROR", payload: "Failed to delete user." });
         }
     };

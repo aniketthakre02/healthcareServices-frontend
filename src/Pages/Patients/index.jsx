@@ -88,9 +88,8 @@ const patientReducer = (state, action) => {
 
 // ── Helpers ───────────────────────────────────────────────
 const statusStyles = {
-    REQUESTED: "bg-yellow-100 text-yellow-600",
-    APPROVED:  "bg-green-100 text-green-600",
-    REJECTED:  "bg-red-100 text-red-500",
+    CONFIRMED: "bg-green-100 text-green-600",
+    PENDING:   "bg-yellow-100 text-yellow-600",
     CANCELLED: "bg-red-100 text-red-500",
     COMPLETED: "bg-blue-100 text-blue-500"
 };
@@ -146,7 +145,7 @@ export const Patients = () => {
                 contact: form.contact
             });
             dispatch({ type: "SAVE_SUCCESS", payload: updated });
-        } catch (_err) {
+        } catch (err) {
             dispatch({ type: "SAVE_ERROR", payload: "Failed to update profile. Please try again." });
         }
     };

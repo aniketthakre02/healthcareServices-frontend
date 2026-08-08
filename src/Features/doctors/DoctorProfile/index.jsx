@@ -1,7 +1,7 @@
 import { Navbar } from '../../../Components/layout/Navbar';
 import { Sidebar } from '../../../Components/layout/Sidebar';
 import { useReducer, useEffect } from 'react';
-import { getDoctorProfile, updateDoctorProfile } from '../../../services/doctorService';
+import { getDoctorProfile, updateDoctorProfile } from '../../../services/doctorSerivce';
 import { User, Phone, Clock, Stethoscope, Edit2, X, Check } from 'lucide-react';
 
 // ── State ─────────────────────────────────────────────────
@@ -161,7 +161,7 @@ export const DoctorProfile = () => {
                 availability:   form.availability
             });
             dispatch({ type: "SAVE_SUCCESS", payload: updated });
-        } catch (_err) {
+        } catch (err) {
             dispatch({ type: "SAVE_ERROR", payload: "Failed to update profile. Please try again." });
         }
     };

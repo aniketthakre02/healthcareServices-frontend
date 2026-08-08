@@ -23,13 +23,7 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
-    },
-  },
-  {
-    files: ['vite.config.js', 'tailwind.config.js', 'postcss.config.js'],
-    languageOptions: {
-      globals: { ...globals.browser, ...globals.node, process: 'readonly' },
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
 ])

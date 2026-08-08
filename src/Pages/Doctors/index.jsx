@@ -92,7 +92,7 @@ export const Doctors = () => {
             try {
                 const result = await getAllDoctors();
                 setData(result);
-            } catch (_err) {
+            } catch (err) {
                 setFetchError("Failed to load doctors.");
             }
         };
@@ -104,34 +104,26 @@ export const Doctors = () => {
     };
 
     const handleBooking = async () => {
-        if (!form.dateTime || !form.reason.trim()) {
+        if (!form.dateTime || !form.reason) {
             dispatch({ type: "BOOKING_ERROR", payload: "All fields are required." });
             return;
         }
-        if (new Date(form.dateTime) <= new Date()) {
-            dispatch({ type: "BOOKING_ERROR", payload: "Appointment must be in the future." });
-            return;
-        }
-        if (!selectedDoctor?.userId) {
-            dispatch({ type: "BOOKING_ERROR", payload: "No doctor selected." });
-            return;
-        }
+
         dispatch({ type: "BOOKING_START" });
         try {
             await bookAppointment({
-                doctorId: selectedDoctor.userId,
+                doctorId: selectedDoctor.userId,  // 👈 use selected doctor's id
                 dateTime: form.dateTime,
-                reason:   form.reason.trim()
+                reason:   form.reason
             });
             dispatch({ type: "BOOKING_SUCCESS", payload: "Appointment booked successfully!" });
             setTimeout(() => dispatch({ type: "CLOSE_MODAL" }), 1500);
-        } catch (_err) {
-            const msg = _err.normalizedMessage || _err.response?.data?.message || "Booking failed. Please try again.";
-            dispatch({ type: "BOOKING_ERROR", payload: typeof msg === "string" ? msg : "Booking failed." });
+        } catch (err) {
+            dispatch({ type: "BOOKING_ERROR", payload: "Booking failed. Please try again." });
         }
     };
 
-    const specializations = ["All", ...new Set(data.map(d => d.specialization).filter(Boolean))];
+    const specializations = ["All", ...new Set(data.map(d => d.specialization))];
 
     const filtered = data.filter(d => {
         const matchesSearch =
